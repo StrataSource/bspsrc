@@ -18,6 +18,7 @@ import info.ata4.bsplib.app.SourceAppId;
 import info.ata4.bsplib.nmo.NmoException;
 import info.ata4.bsplib.nmo.NmoFile;
 import info.ata4.bspsrc.modules.BspDecompiler;
+import info.ata4.bspsrc.util.Winding;
 import info.ata4.log.LogUtils;
 import org.apache.commons.io.output.NullOutputStream;
 
@@ -128,6 +129,12 @@ public class BspSource implements Runnable {
         } catch (IOException ex) {
             L.log(Level.SEVERE, "Can't load " + bspFile, ex);
             return;
+        }
+
+        if ( reader.getBspFile().getAppId() == SourceAppId.STRATA_SOURCE ) {
+            Winding.SetCoordSize( 131072 );
+        } else {            
+            Winding.SetCoordSize( 32768 );
         }
 
         // load NMO if game is 'No More Room in Hell'

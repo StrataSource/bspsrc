@@ -129,10 +129,12 @@ public class BspFileReader {
 
         if (appId() == VINDICTUS) {
             dStructSupplier = DBrushSideVin::new;
+        } else if (appId() == STRATA_SOURCE) {
+            dStructSupplier = DBrushSideStrataV1::new;
         } else if (bspFile.getVersion() >= 21 && appId() != LEFT_4_DEAD_2) {
             // newer BSP files have a slightly different struct that is still reported
             // as version 0
-	        dStructSupplier = DBrushSideV2::new;
+	        dStructSupplier = DBrushSideV0New::new;
         } else {
 	        dStructSupplier = DBrushSide::new;
         }
@@ -168,6 +170,8 @@ public class BspFileReader {
 
 	    if (appId() == VINDICTUS) {
 		    struct = DEdgeVin::new;
+        } else if (appId() == STRATA_SOURCE) {
+		    struct = DEdgeStrataV1::new;
 	    } else {
 		    struct = DEdge::new;
 	    }
@@ -185,7 +189,12 @@ public class BspFileReader {
                     return DFaceVinV2::new;
                 else
                     return DFaceVinV1::new;
-            default:
+            case STRATA_SOURCE:
+                if (lumpVersion == 2)
+                    return DFaceStrataV2::new;
+                else
+                    return DFace::new;
+            default:               
                 switch (bspFile.getVersion()) {
                     case 17:
                         return DFaceBSP17::new;
@@ -302,6 +311,10 @@ public class BspFileReader {
                     dStructSupplier = DDispInfoBSP23::new;
                 }
                 break;
+
+            case STRATA_SOURCE:
+                dStructSupplier = DDispInfoStrataV1::new;
+                break;
         }
 
         bspData.dispinfos = readDStructChunksLump(LumpType.LUMP_DISPINFO, dStructSupplier);
@@ -411,6 +424,8 @@ public class BspFileReader {
 
         if (appId() == VINDICTUS) {
             dStructSupplier = DNodeVin::new;
+        } else if (appId() == STRATA_SOURCE) {
+            dStructSupplier = DNodeStrataV1::new;
         } else {
             dStructSupplier = DNode::new;
         }
@@ -432,6 +447,8 @@ public class BspFileReader {
                 // read AmbientLighting, it was used in initial Half-Life 2 maps
                 // only and doesn't exist in newer or older versions
                 return DLeafV0::new;
+            } else if (appId() == STRATA_SOURCE && lumpVersion == 2) {
+                return DLeafStrataV2::new;
             } else {
                 return DLeafV1::new;
             }
@@ -446,8 +463,12 @@ public class BspFileReader {
             return;
         }
 
-        LumpReader<List<Integer>> lumpReader =
-                appId() != VINDICTUS ? new UShortChunksLumpReader() : new IntegerChunksLumpReader();
+        LumpReader<List<Integer>> lumpReader;
+        if (appId() == VINDICTUS || appId() == STRATA_SOURCE) {
+            lumpReader = new IntegerChunksLumpReader();
+        } else {
+            lumpReader = new UShortChunksLumpReader();
+        }
 
         bspData.leafFaces = readLump(LumpType.LUMP_LEAFFACES, lumpReader);
         L.fine(String.format("%d leaf faces", bspData.leafFaces.size()));
@@ -458,8 +479,12 @@ public class BspFileReader {
             return;
         }
 
-        LumpReader<List<Integer>> lumpReader =
-                appId() != VINDICTUS ? new UShortChunksLumpReader() : new IntegerChunksLumpReader();
+        LumpReader<List<Integer>> lumpReader;
+        if (appId() == VINDICTUS || appId() == STRATA_SOURCE) {
+            lumpReader = new IntegerChunksLumpReader();
+        } else {
+            lumpReader = new UShortChunksLumpReader();
+        }
 
         bspData.leafBrushes = readLump(LumpType.LUMP_LEAFBRUSHES, lumpReader);
         L.fine(String.format("%d leaf brushes", bspData.leafBrushes.size()));
@@ -476,6 +501,8 @@ public class BspFileReader {
             dStructSupplier = DOverlayVin::new;
         } else if (appId() == DOTA_2_BETA) {
             dStructSupplier = DOverlayDota2::new;
+        } else if (appId() == STRATA_SOURCE) {
+            dStructSupplier = DOverlayStrataV1::new;
         } else {
             dStructSupplier = DOverlay::new;
         }
@@ -510,6 +537,8 @@ public class BspFileReader {
 
         if (appId() == VINDICTUS) {
             dStructSupplier = DAreaportalVin::new;
+        } else if (appId() == STRATA_SOURCE) {
+            dStructSupplier = DAreaportalStrataV1::new;
         } else {
             dStructSupplier = DAreaportal::new;
         }
@@ -573,7 +602,15 @@ public class BspFileReader {
             return;
         }
 
-        bspData.prims = readDStructChunksLump(LumpType.LUMP_PRIMITIVES, DPrimitive::new);
+        Supplier<? extends DPrimitive> struct;
+
+	    if (appId() == STRATA_SOURCE) {
+		    struct = DPrimitiveStrataV1::new;
+	    } else {
+		    struct = DPrimitive::new;
+	    }
+
+        bspData.prims = readDStructChunksLump(LumpType.LUMP_PRIMITIVES, struct);
         L.fine(String.format("%d primitives", bspData.prims.size()));
     }
 
@@ -582,7 +619,14 @@ public class BspFileReader {
             return;
         }
 
-        bspData.primIndices = readLump(LumpType.LUMP_PRIMINDICES, new UShortChunksLumpReader());
+        LumpReader<List<Integer>> lumpReader;
+        if (appId() == STRATA_SOURCE) {
+            lumpReader = new IntegerChunksLumpReader();
+        } else {
+            lumpReader = new UShortChunksLumpReader();
+        }
+
+        bspData.primIndices = readLump(LumpType.LUMP_PRIMINDICES, lumpReader);
         L.fine(String.format("%d primitives indices", bspData.primIndices.size()));
     }
 
