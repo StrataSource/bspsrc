@@ -104,7 +104,7 @@ public class SourceAppDB {
                         String.format("App %s has score %f", appScore.app.getName(), appScore.score)
                 ))
                 .max(Comparator.comparing(appScore -> appScore.score))
-                .filter(appScore -> appScore.score > 0)
+                .filter(appScore -> appScore.score >= 0)
                 .map(appScore -> appScore.app)
                 .map(SourceApp::getAppId)
                 .orElse(SourceAppId.UNKNOWN);
