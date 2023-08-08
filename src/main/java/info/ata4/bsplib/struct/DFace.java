@@ -37,8 +37,8 @@ public class DFace implements DStruct {
     public int[] lightmapTextureMinsInLuxels = new int[2];
     public int[] lightmapTextureSizeInLuxels = new int[2];
     public int origFace;
-    public int firstPrimID;
     public int numPrims;
+    public int firstPrimID;
     public int smoothingGroups;
 
     @Override
@@ -64,8 +64,8 @@ public class DFace implements DStruct {
         lightmapTextureSizeInLuxels[0] = in.readInt();
         lightmapTextureSizeInLuxels[1] = in.readInt();
         origFace = in.readInt();
-        firstPrimID = in.readUnsignedShort();
         numPrims = in.readUnsignedShort();
+        firstPrimID = in.readUnsignedShort();
         smoothingGroups = in.readInt();
     }
 
@@ -87,8 +87,8 @@ public class DFace implements DStruct {
         out.writeInt(lightmapTextureSizeInLuxels[0]);
         out.writeInt(lightmapTextureSizeInLuxels[1]);
         out.writeInt(origFace);
-        out.writeUnsignedShort(firstPrimID);
         out.writeUnsignedShort(numPrims);
+        out.writeUnsignedShort(firstPrimID);
         out.writeInt(smoothingGroups);
     }
 }
