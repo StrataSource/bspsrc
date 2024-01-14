@@ -48,7 +48,7 @@ public class StaticPropLumpReader implements LumpReader<StaticPropLumpReader.Sta
 			dataReader.seek((long) psextra * PAD_SIZE, CURRENT);
 		}
 
-		List<Integer> staticPropLeafs = readLeafs(dataReader);
+		List<Number> staticPropLeafs = readLeafs(dataReader);
 
 		Map<Integer, Vector3f> scaling;
 		if (appId == VINDICTUS && sprpVersion > 5) {
@@ -82,11 +82,11 @@ public class StaticPropLumpReader implements LumpReader<StaticPropLumpReader.Sta
 		);
 	}
 
-	private List<Integer> readLeafs(DataReader reader) throws IOException {
+	private List<Number> readLeafs(DataReader reader) throws IOException {
 		int leaveCount = reader.readInt();
 		return DataReaderUtil.readChunks(
 				reader,
-				DataReader::readUnsignedShort,
+				sprpVersion >= 12 ? DataReader::readUnsignedInt : DataReader::readUnsignedShort,
 				leaveCount
 		);
 	}
@@ -187,6 +187,9 @@ public class StaticPropLumpReader implements LumpReader<StaticPropLumpReader.Sta
 			new StaticPropStructDescriptor(DStaticPropV10::new, 10),
 			new StaticPropStructDescriptor(DStaticPropV11lite::new, 11),
 			new StaticPropStructDescriptor(DStaticPropV11::new, 11),
+			// supposedly, v12 only changed static prop leafs. should parse the same as v11
+			new StaticPropStructDescriptor(DStaticPropV11::new, 12),
+			new StaticPropStructDescriptor(DStaticPropV13::new, 13),
 			new StaticPropStructDescriptor(DStaticPropV5Ship::new, 5, THE_SHIP),
 			new StaticPropStructDescriptor(DStaticPropV6BGT::new, 6, BLOODY_GOOD_TIME),
 			new StaticPropStructDescriptor(DStaticPropV7ZC::new, 7, ZENO_CLASH),
@@ -216,7 +219,7 @@ public class StaticPropLumpReader implements LumpReader<StaticPropLumpReader.Sta
 	public static class StaticPropData {
 
 		public final List<String> names;
-		public final List<Integer> leafs;
+		public final List<Number> leafs;
 		public final List<? extends DStaticProp> props;
 
 		public StaticPropData() {
@@ -225,7 +228,7 @@ public class StaticPropLumpReader implements LumpReader<StaticPropLumpReader.Sta
 
 		public StaticPropData(
 				List<String> names,
-				List<Integer> leafs,
+				List<Number> leafs,
 				List<? extends DStaticProp> props
 		) {
 			this.names = listCopyOf(names);
